@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Saturday Planner</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f7fb;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      
+      form {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 30px;
+      }
+      
+      input, button {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+      }
+      
+      input {
+        background: white;
+      }
+      
+      button {
+        background: #4f46e5;
+        color: white;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      
+      button:hover {
+        background: #4338ca;
+      }
+      
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      }
+      
+      .card h3 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+      }
+      
+      .card p {
+        margin: 4px 0;
+        color: #555;
+      }
+      
+      .hidden {
+        display: none;
+      }
+  </style>
+</head>
+<body>
+  <h1>Saturday Planner</h1>
+
+  <form id="planner-form">
+    <input
+      id="starting_location"
+      type="text"
+      placeholder="Starting location"
+      required
+    />
+
+    <input
+      id="max_travel_time"
+      type="number"
+      placeholder="Max one-way travel time (minutes)"
+      required
+    />
+
+    <input
+      id="place_keywords"
+      type="text"
+      placeholder="Keywords (example: beach, park)"
+      required
+    />
+
+    <input
+      id="budget"
+      type="text"
+      placeholder="Budget (example: low, medium, high)"
+      required
+    />
+
+    <button type="submit">Find Places</button>
+  </form>
+
+  <p id="loading" class="hidden">Loading...</p>
+
+  <div id="results"></div>
+
+  <script>
+    const form = document.getElementById("planner-form");
+    const resultsDiv = document.getElementById("results");
+    const loadingText = document.getElementById("loading");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      resultsDiv.innerHTML = "";
+      loadingText.classList.remove("hidden");
+
+      const payload = {
+        starting_location: document.getElementById("starting_location").value,
+        max_travel_time: parseInt(document.getElementById("max_travel_time").value),
+        place_keywords: document.getElementById("place_keywords").value,
+        budget: document.getElementById("budget").value
+      };
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/plan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        loadingText.classList.add("hidden");
+
+        if (!data.results || data.results.length === 0) {
+          resultsDiv.innerHTML = "<p>No places found.</p>";
+          return;
+        }
+
+        data.results.forEach((place, index) => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          card.innerHTML = `
+            <h3>${index + 1}. ${place.name.split(",")[0]}</h3>
+            <p><strong>Type:</strong> ${place.type === "park" ? "🌳 Park" : "🏖 Beach"}</p>
+            <p><strong>Travel time:</strong> ${place.travel_time_minutes} mins</p>
+          `;
+
+          resultsDiv.appendChild(card);
+        });
+      } catch (error) {
+        loadingText.classList.add("hidden");
+        resultsDiv.innerHTML = "<p>Something went wrong connecting to the backend.</p>";
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
