@@ -2,7 +2,7 @@ import requests
 import os
 from langchain.tools import tool
 
-GOOGLE_API_KEY = "AIzaSyDa9RmVcUMZE99eT2_TQKwKACx8BC4Uevw"
+GOOGLE_API_KEY = "ENTER YOUR KEY HERE"
 
 @tool
 def search_candidate_places(input_str: str):
